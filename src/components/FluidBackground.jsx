@@ -41,63 +41,109 @@ export default function FluidBackground() {
       }
     `;
 
-    // Fragment Shader Source (Liquid Aurora Shader)
+    // Fragment Shader Source (Interactive Liquid Glass/Chrome Shader)
     const fsSource = `
       precision mediump float;
       uniform vec2 u_resolution;
       uniform vec2 u_mouse;
       uniform float u_time;
-      uniform float u_theme; // 0 for dark, 1 for light
+      uniform float u_theme;
 
-      float wave(vec2 p, float angle, float scale, float speed) {
-        float a = angle * 0.01745329;
-        vec2 dir = vec2(cos(a), sin(a));
-        return sin(dot(p, dir) * scale + u_time * speed);
+      // Pseudo-random hash helper for simplex-like noise
+      vec3 hash(vec3 p) {
+        p = vec3(dot(p, vec3(127.1, 311.7, 74.7)),
+                 dot(p, vec3(269.5, 183.3, 246.1)),
+                 dot(p, vec3(113.5, 271.9, 124.3)));
+        return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+      }
+
+      // Value noise algorithm
+      float noise(vec3 p) {
+        vec3 i = floor(p);
+        vec3 f = fract(p);
+        vec3 u = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(dot(hash(i + vec3(0.0,0.0,0.0)), f - vec3(0.0,0.0,0.0)),
+                           dot(hash(i + vec3(1.0,0.0,0.0)), f - vec3(1.0,0.0,0.0)), u.x),
+                       mix(dot(hash(i + vec3(0.0,1.0,0.0)), f - vec3(0.0,1.0,0.0)),
+                           dot(hash(i + vec3(1.0,1.0,0.0)), f - vec3(1.0,1.0,0.0)), u.x), u.y),
+                   mix(mix(dot(hash(i + vec3(0.0,0.0,1.0)), f - vec3(0.0,0.0,1.0)),
+                           dot(hash(i + vec3(1.0,0.0,1.0)), f - vec3(1.0,0.0,1.0)), u.x),
+                       mix(dot(hash(i + vec3(0.0,1.0,1.0)), f - vec3(0.0,1.0,1.0)),
+                           dot(hash(i + vec3(1.0,1.0,1.0)), f - vec3(1.0,1.0,1.0)), u.x), u.y), u.z);
+      }
+
+      // 4-octave Fractional Brownian Motion
+      float fbm(vec3 p) {
+        float v = 0.0;
+        float a = 0.5;
+        vec3 shift = vec3(100.0);
+        for (int i = 0; i < 4; i++) {
+          v += a * noise(p);
+          p = p * 2.0 + shift;
+          a *= 0.5;
+        }
+        return v;
       }
 
       void main() {
         vec2 p = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;
         vec2 mouse = (u_mouse - 0.5 * u_resolution.xy) / u_resolution.y;
         
+        // Mouse coordinate spotlight trigger
         float distToMouse = length(p - mouse);
-        float mouseForce = smoothstep(0.7, 0.0, distToMouse);
+        float mouseForce = smoothstep(0.6, 0.0, distToMouse);
         
-        // Liquid Domain Warping
-        p.x += sin(p.y * 1.8 + u_time * 0.4) * 0.18 + mouseForce * (p.x - mouse.x) * 0.35;
-        p.y += cos(p.x * 1.8 + u_time * 0.3) * 0.18 + mouseForce * (p.y - mouse.y) * 0.35;
+        // Warping coordinates for fluid effect
+        vec3 p3 = vec3(p * 1.8, u_time * 0.12);
         
-        float w1 = wave(p, 40.0, 1.2, 0.35);
-        float w2 = wave(p, 130.0, 1.8, 0.25);
-        float w3 = wave(p, 230.0, 1.0, 0.5);
-        float mixWave = (w1 + w2 + w3) / 3.0;
+        // Domain warping for liquid movement
+        float n1 = fbm(p3);
+        float n2 = fbm(p3 + vec3(n1 * 1.2, n1 * 0.8, 0.0) + vec3(mouse * mouseForce * 1.8, 0.0));
+        float n3 = fbm(p3 + vec3(n2 * 1.8, n2 * 1.2, 0.05));
         
-        // Themes Color Palettes
-        vec3 color1, color2, base;
+        // Surface normal calculation from the noise slope
+        float eps = 0.02;
+        float h_l = fbm(p3 - vec3(eps, 0.0, 0.0));
+        float h_r = fbm(p3 + vec3(eps, 0.0, 0.0));
+        float h_d = fbm(p3 - vec3(0.0, eps, 0.0));
+        float h_u = fbm(p3 + vec3(0.0, eps, 0.0));
         
+        // Calculate standard surface normal
+        vec3 normal = normalize(vec3(h_l - h_r, h_d - h_u, 0.12));
+        
+        // Phong reflection vectors
+        vec3 lightDir = normalize(vec3(1.0, 1.0, 0.8));
+        vec3 viewDir = vec3(0.0, 0.0, 1.0);
+        vec3 halfDir = normalize(lightDir + viewDir);
+        
+        float specular = pow(max(0.0, dot(normal, halfDir)), 32.0); // Wet shiny specularity
+        float fresnel = pow(1.0 - max(0.0, dot(normal, viewDir)), 3.5); // Fresnel refraction edges
+        
+        // Color setups
+        vec3 baseColor, accentCoral, accentCyan;
         if (u_theme < 0.5) {
-          // Obsidian Dark Theme
-          color1 = vec3(1.0, 0.3, 0.0);   // Coral Orange
-          color2 = vec3(0.05, 0.72, 0.9); // Electric Cyan
-          base = vec3(0.03, 0.03, 0.04);   // Obsidian Black
+          baseColor = vec3(0.02, 0.02, 0.03); // Obsidian dark
+          accentCoral = vec3(1.0, 0.25, 0.0);  // Deep glowing coral
+          accentCyan = vec3(0.0, 0.72, 0.95);  // Electric cyan glass
         } else {
-          // Slate Light Theme
-          color1 = vec3(1.0, 0.35, 0.1);  // Slightly softer coral
-          color2 = vec3(0.02, 0.57, 0.7);  // Soft cyan
-          base = vec3(0.97, 0.98, 0.99);   // Off-white
+          baseColor = vec3(0.96, 0.97, 0.98); // Off-white light
+          accentCoral = vec3(1.0, 0.35, 0.1);
+          accentCyan = vec3(0.02, 0.57, 0.7);
         }
         
-        vec3 finalColor = base;
+        // Map noise to colors
+        vec3 liquidColor = baseColor;
+        liquidColor = mix(liquidColor, accentCoral, smoothstep(0.0, 0.6, n3) * (u_theme < 0.5 ? 0.38 : 0.08));
+        liquidColor = mix(liquidColor, accentCyan, smoothstep(-0.6, 0.2, n3) * (u_theme < 0.5 ? 0.28 : 0.07));
         
-        // Layer gradient flows
-        finalColor = mix(finalColor, color1, smoothstep(-0.5, 0.5, mixWave) * (u_theme < 0.5 ? 0.20 : 0.06));
-        finalColor = mix(finalColor, color2, smoothstep(-0.5, 0.5, -mixWave) * (u_theme < 0.5 ? 0.16 : 0.05));
+        // Add glass specular shine & refraction rims
+        vec3 glassHighlight = vec3(1.0) * (specular * (u_theme < 0.5 ? 0.40 : 0.20));
+        vec3 glassRim = (u_theme < 0.5 ? accentCyan : accentCoral) * (fresnel * 0.18);
         
-        // Spotlight glow effect
-        if (u_theme < 0.5) {
-          finalColor += vec3(1.0, 0.3, 0.0) * mouseForce * 0.06;
-        } else {
-          finalColor += vec3(0.02, 0.57, 0.7) * mouseForce * 0.02;
-        }
+        vec3 finalColor = liquidColor + glassHighlight + glassRim;
+        
+        // Add custom spotlight glow around cursor
+        finalColor += vec3(1.0, 0.3, 0.0) * mouseForce * (u_theme < 0.5 ? 0.08 : 0.02);
         
         gl_FragColor = vec4(finalColor, 1.0);
       }
@@ -188,5 +234,5 @@ export default function FluidBackground() {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="particles-canvas" style={{ filter: 'contrast(1.05)' }} />;
+  return <canvas ref={canvasRef} className="particles-canvas" style={{ filter: 'contrast(1.08) brightness(0.98)' }} />;
 }
