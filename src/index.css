@@ -346,13 +346,22 @@ h1, h2, h3, h4 {
   text-transform: uppercase;
   display: inline-flex;
   align-items: center;
+}
+
+/* Static Clipping Container */
+.nav-link-roll {
+  display: inline-block;
   overflow: hidden;
+  height: 18px;
+  line-height: 18px;
+  vertical-align: middle;
 }
 
 /* Slide Roll Text Wrapper */
 .nav-link-text {
-  display: inline-block;
+  display: block;
   position: relative;
+  height: 100%;
   transition: transform 0.45s cubic-bezier(0.11, 0.82, 0.39, 0.92);
 }
 
@@ -362,6 +371,7 @@ h1, h2, h3, h4 {
   left: 0;
   top: 100%;
   color: #ffffff;
+  font-weight: 600;
 }
 
 .nav-link:hover .nav-link-text, .nav-link.active .nav-link-text {
