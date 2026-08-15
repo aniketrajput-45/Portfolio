@@ -28,157 +28,115 @@ export default function ChromeTorus() {
     let width = (canvas.width = 380);
     let height = (canvas.height = 380);
 
-    // Torus Geometry Parameters
-    const R = 80;  // Major radius
-    const r = 38;  // Minor tube radius
-    const thetaSteps = 24;
-    const phiSteps = 42;
+    // Torus Knot (2, 3) Geometry Setup
+    const steps = 300;
     const vertices = [];
+    const pKnot = 2;
+    const qKnot = 3;
 
-    // Generate Torus point vertices and normals
-    for (let i = 0; i < thetaSteps; i++) {
-      const theta = (i / thetaSteps) * Math.PI * 2;
-      for (let j = 0; j < phiSteps; j++) {
-        const phi = (j / phiSteps) * Math.PI * 2;
+    // Generate knot path coordinates
+    for (let i = 0; i < steps; i++) {
+      const phi = (i / steps) * Math.PI * 2;
+      
+      // Parametric formulas for a Trefoil Knot
+      const rKnot = 2.0 + Math.cos(qKnot * phi);
+      const x = rKnot * Math.cos(pKnot * phi) * 42;
+      const y = rKnot * Math.sin(pKnot * phi) * 42;
+      const z = -Math.sin(qKnot * phi) * 42;
 
-        // Position coordinates
-        const x = (R + r * Math.cos(theta)) * Math.cos(phi);
-        const y = (R + r * Math.cos(theta)) * Math.sin(phi);
-        const z = r * Math.sin(theta);
-
-        // Surface normals (used for reflective chrome specular calculations)
-        const nx = Math.cos(theta) * Math.cos(phi);
-        const ny = Math.cos(theta) * Math.sin(phi);
-        const nz = Math.sin(theta);
-
-        vertices.push({ x, y, z, nx, ny, nz, theta, phi });
-      }
+      vertices.push({ x, y, z });
     }
 
     const fov = 350;
-    const lightSource = { x: 1, y: 1, z: -1 }; // Light source pointing from top-right-front
-    
-    // Normalize light source vector
-    const len = Math.sqrt(lightSource.x ** 2 + lightSource.y ** 2 + lightSource.z ** 2);
-    lightSource.x /= len;
-    lightSource.y /= len;
-    lightSource.z /= len;
-
     let time = 0;
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-      time += 0.01;
+      time += 0.008; // Graceful, slower rotation
 
       // Smooth mouse coordinates tracking (spring inertia)
-      mouse.x += (targetMouse.current.x - mouse.x) * 0.08;
-      mouse.y += (targetMouse.current.y - mouse.y) * 0.08;
+      mouse.x += (targetMouse.current.x - mouse.x) * 0.06;
+      mouse.y += (targetMouse.current.y - mouse.y) * 0.06;
 
-      // Calculate rotations: combine automatic rotation with mouse offsets
-      const rotY = time * 0.5 + mouse.x * 0.8;
-      const rotX = time * 0.35 + mouse.y * 0.8;
-      const rotZ = time * 0.2;
+      // Rotations: combine automatic rotation with mouse offsets
+      const rotY = time * 0.45 + mouse.x * 0.7;
+      const rotX = time * 0.3 + mouse.y * 0.7;
+      const rotZ = time * 0.15;
 
       const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
       const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
       const cosZ = Math.cos(rotZ), sinZ = Math.sin(rotZ);
 
-      // Rotate, project, and shade each vertex
+      // Rotate and project each point
       const projected = vertices.map((v) => {
         // 1. Rotate Y-axis
         let x1 = v.x * cosY - v.z * sinY;
         let z1 = v.x * sinY + v.z * cosY;
         let y1 = v.y;
-        
-        let nx1 = v.nx * cosY - v.nz * sinY;
-        let nz1 = v.nx * sinY + v.nz * cosY;
-        let ny1 = v.ny;
 
         // 2. Rotate X-axis
         let y2 = y1 * cosX - z1 * sinX;
         let z2 = y1 * sinX + z1 * cosX;
         let x2 = x1;
-        
-        let ny2 = ny1 * cosX - nz1 * sinX;
-        let nz2 = ny1 * sinX + nz1 * cosX;
-        let nx2 = nx1;
 
         // 3. Rotate Z-axis
         let x3 = x2 * cosZ - y2 * sinZ;
         let y3 = x2 * sinZ + y2 * cosZ;
         let z3 = z2;
 
-        let nx3 = nx2 * cosZ - ny2 * sinZ;
-        let ny3 = nx2 * sinZ + ny2 * cosZ;
-        let nz3 = nz2;
-
-        // Shift depth z so geometry floats in front of camera
-        const depthZ = z3 + 200;
+        // Depth positioning (shift back into view coordinate system)
+        const depthZ = z3 + 180;
         
-        // 4. Perspective Projection
+        // Perspective Projection
         const scale = fov / (fov + depthZ);
         const screenX = x3 * scale + width / 2;
         const screenY = y3 * scale + height / 2;
-
-        // 5. Specular Chrome Shading Calculation (Phong reflection model simulation)
-        // Dot product between rotated normals and light source
-        const dotProduct = nx3 * lightSource.x + ny3 * lightSource.y + nz3 * lightSource.z;
-        const shade = Math.max(0, dotProduct);
-        
-        // Specular highlight (reflected vector dot viewer vector)
-        // Viewer is looking along positive Z direction (0, 0, 1)
-        const rx = 2 * dotProduct * nx3 - lightSource.x;
-        const ry = 2 * dotProduct * ny3 - lightSource.y;
-        const rz = 2 * dotProduct * nz3 - lightSource.z;
-        const spec = Math.pow(Math.max(0, rz), 16); // High exponent for sharp metallic chrome reflection
 
         return {
           x: screenX,
           y: screenY,
           z: depthZ,
           scale,
-          shade,
-          spec,
         };
       });
 
-      // Depth sort vertices (Painter's algorithm: draw back to front)
+      // Painter's Algorithm: Depth sort back-to-front to build solid volume overlay
       const sorted = [...projected].sort((a, b) => b.z - a.z);
 
-      // Render vertices as chrome point particles
+      // Render overlapping shaded spheres to create a continuous chrome tube
       sorted.forEach((p) => {
         if (p.z <= 0) return;
 
-        // Base color theme HSL values
-        // For dark mode, base color is metallic dark silver-blue
-        // High specularity blends in bright white light reflections
-        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+        // Set radius based on perspective scale (tube thickness)
+        const radius = Math.max(1.5, 17 * p.scale);
         
-        let r, g, b;
+        // Radial gradient simulating phong lighting & environment reflection on metallic surface
+        const grad = ctx.createRadialGradient(
+          p.x - radius * 0.32, p.y - radius * 0.32, 0,
+          p.x, p.y, radius
+        );
+        
+        const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         if (isLight) {
-          // Chrome under light mode (reflective silver-gray with bright orange hint)
-          r = Math.floor(180 + p.shade * 50 + p.spec * 75);
-          g = Math.floor(190 + p.shade * 40 + p.spec * 65);
-          b = Math.floor(210 + p.shade * 30 + p.spec * 45);
+          // Chrome under light mode (reflective silver-gray with soft warm highlight)
+          grad.addColorStop(0, '#ffffff');       // specular reflection highlight
+          grad.addColorStop(0.12, '#ffece5');    // light coral glow specular
+          grad.addColorStop(0.45, '#ff7a45');    // coral color base
+          grad.addColorStop(0.8, '#00b7d4');     // light cyan refraction shadow
+          grad.addColorStop(1, '#dbdbdb');       // ambient shadow boundary
         } else {
-          // Chrome under dark mode (high contrast black metallic with neon violet/coral sheen)
-          r = Math.floor(20 + p.shade * 140 + p.spec * 235);
-          g = Math.floor(15 + p.shade * 40 + p.spec * 240);
-          b = Math.floor(40 + p.shade * 100 + p.spec * 215);
+          // Chrome under dark mode (high contrast metallic obsidian with neon reflections)
+          grad.addColorStop(0, '#ffffff');       // specular reflection highlight
+          grad.addColorStop(0.1, '#1ae0ff');     // cyan specular highlight
+          grad.addColorStop(0.42, '#ff4d00');    // coral base color
+          grad.addColorStop(0.85, '#070709');    // deep metallic obsidian core
+          grad.addColorStop(1, '#010102');       // shadow boundary edge
         }
 
-        ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, Math.max(0.5, 2.2 * p.scale), 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         ctx.fill();
-        
-        // Draw tiny glow dot for the specular highlights
-        if (p.spec > 0.8) {
-          ctx.fillStyle = isLight ? 'rgba(255, 77, 0, 0.4)' : 'rgba(26, 224, 255, 0.6)';
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, 4 * p.scale, 0, Math.PI * 2);
-          ctx.fill();
-        }
       });
 
       animationId = requestAnimationFrame(render);
@@ -198,7 +156,7 @@ export default function ChromeTorus() {
         width: '380px',
         height: '380px',
         maxWidth: '100%',
-        filter: 'drop-shadow(0 0 20px rgba(255, 77, 0, 0.1))',
+        filter: 'drop-shadow(0 0 25px rgba(255, 77, 0, 0.18))',
       }}
     />
   );
