@@ -14,6 +14,25 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('home');
   const [selectedProject, setSelectedProject] = useState(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Simulated Olha-style loader count progress
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(() => setIsLoaded(true), 400); // slight pause at 100%
+          return 100;
+        }
+        const step = Math.floor(Math.random() * 8) + 4; // organic speed loading
+        return Math.min(prev + step, 100);
+      });
+    }, 40);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Sync theme with HTML attribute
   useEffect(() => {
@@ -128,9 +147,19 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app-container">
-      <CustomCursor />
-      <ParticlesBackground />
+    <>
+      {/* Olha-style Typographic Preloader overlay */}
+      {!isLoaded && (
+        <div className={`loader-overlay ${loadingProgress === 100 ? 'fade-out' : ''}`}>
+          <div className="loader-counter">
+            {String(loadingProgress).padStart(3, '0')}%
+          </div>
+        </div>
+      )}
+
+      <div className={`app-container ${isLoaded ? 'is-loaded' : ''}`}>
+        <CustomCursor />
+        <ParticlesBackground />
       
       {/* Yasio vertical track indicator */}
       <div className="timeline-track-container">
@@ -168,5 +197,6 @@ export default function App() {
         />
       )}
     </div>
+  </>
   );
 }

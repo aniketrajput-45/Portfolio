@@ -10,16 +10,25 @@ export default function Hero({ onNavClick }) {
         <div className="hero-content">
           <div className="hero-tag">JAVA &middot; MERN &middot; DSA</div>
           
-          <h1 className="hero-name">
-            ANIKET KUMAR
-            <span>SINGH</span>
-          </h1>
-          
+          <h1 className="hero-name-wrap">
+          <span className="hero-word-line">
+            <span className="hero-word">ANIKET</span>
+            <span className="hero-word">KUMAR</span>
+          </span>
+          <span className="hero-word-line">
+            <span className="hero-word secondary">SINGH</span>
+          </span>
+        </h1>
+        
+        <div className="hero-title-wrap">
           <h2 className="hero-title">Turning complexity into beautiful simplicity.</h2>
-          
+        </div>
+        
+        <div className="hero-sub-wrap">
           <p className="hero-sub">
             Full Stack Developer building clean digital products that combine clarity, consistency, and craft. From robust backends to interactive interfaces, I construct cohesive software ecosystems.
           </p>
+        </div>
 
           <div 
             className="hero-interactive"

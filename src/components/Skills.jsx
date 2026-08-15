@@ -1,3 +1,5 @@
+import PhysicsCanvas from './PhysicsCanvas';
+
 export default function Skills() {
   const skillCategories = [
     {
@@ -28,7 +30,7 @@ export default function Skills() {
         <span className="block-reveal-content">Skills</span>
       </h2>
       
-      <div className="skills-container">
+      <div className="skills-container" style={{ marginBottom: '4rem' }}>
         {skillCategories.map((category, catIdx) => (
           <div key={catIdx} className="skills-category">
             <h3 className="skills-category-title">{category.title}</h3>
@@ -42,6 +44,8 @@ export default function Skills() {
           </div>
         ))}
       </div>
+
+      <PhysicsCanvas />
     </section>
   );
 }
