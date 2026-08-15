@@ -25,7 +25,9 @@ export default function Navbar({ activeSection, onNavClick, theme, onToggleTheme
                   className={`nav-link ${activeSection === item.id ? 'active' : ''}`}
                   onClick={() => onNavClick(item.id)}
                 >
-                  {item.label}
+                  <span className="nav-link-text" data-text={item.label}>
+                    {item.label}
+                  </span>
                 </span>
               </li>
             ))}
