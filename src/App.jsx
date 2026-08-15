@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
-import ParticlesBackground from './components/ParticlesBackground';
+import FluidBackground from './components/FluidBackground';
 import Hero from './components/Hero';
 import About from './components/About';
 import Skills from './components/Skills';
@@ -96,21 +96,32 @@ export default function App() {
       );
     };
 
-    sections.forEach((section) => {
-      spyObserver.observe(section);
-      section.classList.add('fade-in-section');
-      
-      // If already in viewport on mount, make visible immediately
-      if (checkInViewport(section)) {
-        section.classList.add('is-visible');
-        const reveals = section.querySelectorAll('.block-reveal');
-        reveals.forEach((el) => el.classList.add('is-visible'));
-      } else {
-        animationObserver.observe(section);
-      }
-    });
+    // Run layout initialization with a tiny delay to ensure browser reflow has completed
+    const timer = setTimeout(() => {
+      sections.forEach((section) => {
+        spyObserver.observe(section);
+        
+        // Exclude the hero section from the initial fade-in hide state so above-the-fold content is instantly visible
+        if (section.id === 'home') {
+          section.classList.add('is-visible');
+          const reveals = section.querySelectorAll('.block-reveal');
+          reveals.forEach((el) => el.classList.add('is-visible'));
+        } else {
+          section.classList.add('fade-in-section');
+          
+          if (checkInViewport(section)) {
+            section.classList.add('is-visible');
+            const reveals = section.querySelectorAll('.block-reveal');
+            reveals.forEach((el) => el.classList.add('is-visible'));
+          } else {
+            animationObserver.observe(section);
+          }
+        }
+      });
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       spyObserver.disconnect();
       animationObserver.disconnect();
     };
@@ -119,7 +130,7 @@ export default function App() {
   return (
     <div className="app-container">
       <CustomCursor />
-      <ParticlesBackground />
+      <FluidBackground />
       
       {/* Yasio vertical track indicator */}
       <div className="timeline-track-container">

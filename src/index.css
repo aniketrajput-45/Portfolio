@@ -924,3 +924,27 @@ h1, h2, h3, h4 {
 [data-theme='light'] .bg-spotlight {
   background: radial-gradient(circle, rgba(255, 77, 0, 0.02) 0%, rgba(26, 224, 255, 0.01) 50%, rgba(0, 0, 0, 0) 70%);
 }
+
+/* Hero Section Grid Layout */
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 40px;
+  align-items: center;
+  width: 100%;
+}
+.hero-visual {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+@media (max-width: 900px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .hero-visual {
+    order: -1; /* Display 3D element above text on mobile */
+  }
+}
