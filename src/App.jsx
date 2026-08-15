@@ -4,6 +4,7 @@ import ParticlesBackground from './components/ParticlesBackground';
 import Hero from './components/Hero';
 import About from './components/About';
 import Skills from './components/Skills';
+import Services from './components/Services';
 import Work from './components/Work';
 import Contact from './components/Contact';
 import ProjectModal from './components/ProjectModal';
@@ -177,6 +178,7 @@ export default function App() {
         <Hero onNavClick={handleNavClick} />
         <About />
         <Skills />
+        <Services />
         <Work onSelectProject={setSelectedProject} />
         <Contact />
       </main>
