@@ -177,6 +177,7 @@ export default function FluidBackground() {
     }
 
     gl.useProgram(program);
+    gl.viewport(0, 0, width, height);
 
     // Quad geometry covering screen
     const vertices = new Float32Array([
