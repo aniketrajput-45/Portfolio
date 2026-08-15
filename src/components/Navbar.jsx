@@ -1,9 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 
 export default function Navbar({ activeSection, onNavClick, theme, onToggleTheme }) {
-  const containerRef = useRef(null);
-  const [indicatorStyle, setIndicatorStyle] = useState({ left: 0, width: 0, opacity: 0 });
-
   const navItems = [
     { id: 'home', label: 'HOME' },
     { id: 'about', label: 'ABOUT' },
@@ -11,37 +8,6 @@ export default function Navbar({ activeSection, onNavClick, theme, onToggleTheme
     { id: 'work', label: 'WORK' },
     { id: 'contact', label: 'CONTACT' },
   ];
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    const activeEl = containerRef.current.querySelector(`.nav-link[data-id="${activeSection}"]`);
-    if (activeEl) {
-      setIndicatorStyle({
-        left: activeEl.offsetLeft,
-        width: activeEl.offsetWidth,
-        opacity: 1
-      });
-    } else {
-      setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
-    }
-  }, [activeSection]);
-
-  // Handle window resizing to keep indicator aligned
-  useEffect(() => {
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      const activeEl = containerRef.current.querySelector(`.nav-link[data-id="${activeSection}"]`);
-      if (activeEl) {
-        setIndicatorStyle({
-          left: activeEl.offsetLeft,
-          width: activeEl.offsetWidth,
-          opacity: 1
-        });
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [activeSection]);
 
   return (
     <header className="header">
@@ -51,7 +17,7 @@ export default function Navbar({ activeSection, onNavClick, theme, onToggleTheme
         </a>
 
         <nav style={{ position: 'relative' }}>
-          <ul className="nav-menu" ref={containerRef}>
+          <ul className="nav-menu">
             {navItems.map((item) => (
               <li key={item.id}>
                 <span
@@ -63,14 +29,6 @@ export default function Navbar({ activeSection, onNavClick, theme, onToggleTheme
                 </span>
               </li>
             ))}
-            <div
-              className="nav-indicator"
-              style={{
-                left: `${indicatorStyle.left}px`,
-                width: `${indicatorStyle.width}px`,
-                opacity: indicatorStyle.opacity,
-              }}
-            />
           </ul>
         </nav>
 

@@ -118,19 +118,19 @@ export default function ChromeTorus() {
         
         const isLight = document.documentElement.getAttribute('data-theme') === 'light';
         if (isLight) {
-          // Chrome under light mode (reflective silver-gray with soft warm highlight)
+          // Grayscale chrome under light mode (charcoal/dark metal reflections)
           grad.addColorStop(0, '#ffffff');       // specular reflection highlight
-          grad.addColorStop(0.12, '#ffece5');    // light coral glow specular
-          grad.addColorStop(0.45, '#ff7a45');    // coral color base
-          grad.addColorStop(0.8, '#00b7d4');     // light cyan refraction shadow
+          grad.addColorStop(0.15, '#e5e7eb');    // light silver sheen
+          grad.addColorStop(0.5, '#6b7280');     // charcoal body
+          grad.addColorStop(0.85, '#1f2937');    // dark core reflection
           grad.addColorStop(1, '#dbdbdb');       // ambient shadow boundary
         } else {
-          // Chrome under dark mode (high contrast metallic obsidian with neon reflections)
+          // Grayscale chrome under dark mode (bright reflective silver metal)
           grad.addColorStop(0, '#ffffff');       // specular reflection highlight
-          grad.addColorStop(0.1, '#1ae0ff');     // cyan specular highlight
-          grad.addColorStop(0.42, '#ff4d00');    // coral base color
-          grad.addColorStop(0.85, '#070709');    // deep metallic obsidian core
-          grad.addColorStop(1, '#010102');       // shadow boundary edge
+          grad.addColorStop(0.1, '#f3f4f6');     // bright silver highlights
+          grad.addColorStop(0.45, '#9ca3af');    // metallic silver body
+          grad.addColorStop(0.82, '#171717');    // dark core body
+          grad.addColorStop(1, '#09090b');       // deep black boundary edge
         }
 
         ctx.fillStyle = grad;
@@ -156,7 +156,7 @@ export default function ChromeTorus() {
         width: '380px',
         height: '380px',
         maxWidth: '100%',
-        filter: 'drop-shadow(0 0 25px rgba(255, 77, 0, 0.18))',
+        filter: 'drop-shadow(0 0 20px rgba(120, 120, 120, 0.12))',
       }}
     />
   );
