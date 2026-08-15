@@ -70,8 +70,8 @@ export default function App() {
     // Observer for Fade-in & Block Reveal animations
     const animationOptions = {
       root: null,
-      rootMargin: '0px 0px -100px 0px',
-      threshold: 0.05
+      rootMargin: '0px 0px -20px 0px', // More forgiving trigger boundary
+      threshold: 0
     };
 
     const animationObserver = new IntersectionObserver((entries) => {
@@ -79,21 +79,35 @@ export default function App() {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-visible');
           
-          // Trigger any block-reveal elements inside this section
           const reveals = entry.target.querySelectorAll('.block-reveal');
           reveals.forEach((el) => el.classList.add('is-visible'));
 
-          animationObserver.unobserve(entry.target); // Animates only once
+          animationObserver.unobserve(entry.target);
         }
       });
     }, animationOptions);
 
+    // Check if element is in viewport on page load
+    const checkInViewport = (el) => {
+      const rect = el.getBoundingClientRect();
+      return (
+        rect.top < (window.innerHeight || document.documentElement.clientHeight) &&
+        rect.bottom > 0
+      );
+    };
+
     sections.forEach((section) => {
       spyObserver.observe(section);
-      
-      // Initialize layout fade-in classes
       section.classList.add('fade-in-section');
-      animationObserver.observe(section);
+      
+      // If already in viewport on mount, make visible immediately
+      if (checkInViewport(section)) {
+        section.classList.add('is-visible');
+        const reveals = section.querySelectorAll('.block-reveal');
+        reveals.forEach((el) => el.classList.add('is-visible'));
+      } else {
+        animationObserver.observe(section);
+      }
     });
 
     return () => {
