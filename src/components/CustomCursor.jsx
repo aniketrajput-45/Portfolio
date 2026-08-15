@@ -2,13 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 
 export default function CustomCursor() {
   const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [trail, setTrail] = useState([
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-    { x: 0, y: 0 },
-  ]);
+  const [trail, setTrail] = useState({ x: 0, y: 0 });
   const [isHovered, setIsHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
@@ -45,26 +39,18 @@ export default function CustomCursor() {
     };
   }, [isVisible]);
 
-  // Trail rendering loop with fluid spring-lag physics
+  // Trail rendering loop
   useEffect(() => {
     if (isTouch) return;
 
     const updateTrail = () => {
       setTrail((prev) => {
-        const next = [...prev];
-        
-        // Lead node follows position with ease
-        const dx0 = position.x - next[0].x;
-        const dy0 = position.y - next[0].y;
-        next[0] = { x: next[0].x + dx0 * 0.32, y: next[0].y + dy0 * 0.32 };
-
-        // Successive nodes follow the node immediately in front of them
-        for (let i = 1; i < next.length; i++) {
-          const dx = next[i - 1].x - next[i].x;
-          const dy = next[i - 1].y - next[i].y;
-          next[i] = { x: next[i].x + dx * 0.22, y: next[i].y + dy * 0.22 };
-        }
-        return next;
+        const dx = position.x - prev.x;
+        const dy = position.y - prev.y;
+        return {
+          x: prev.x + dx * 0.16,
+          y: prev.y + dy * 0.16,
+        };
       });
       requestRef.current = requestAnimationFrame(updateTrail);
     };
@@ -73,7 +59,7 @@ export default function CustomCursor() {
     return () => cancelAnimationFrame(requestRef.current);
   }, [position, isTouch]);
 
-  // Hover detection logic
+  // Hover selector handler
   useEffect(() => {
     if (isTouch) return;
 
@@ -103,25 +89,6 @@ export default function CustomCursor() {
 
   return (
     <>
-      {/* SVG gooey liquid mercury filter */}
-      <svg style={{ position: 'fixed', width: 0, height: 0, pointerEvents: 'none' }} aria-hidden="true">
-        <defs>
-          <filter id="gooey">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
-            <feColorMatrix 
-              in="blur" 
-              mode="matrix" 
-              values="1 0 0 0 0  
-                      0 1 0 0 0  
-                      0 0 1 0 0  
-                      0 0 0 18 -8" 
-              result="goo" 
-            />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
-          </filter>
-        </defs>
-      </svg>
-      
       {/* Background Spotlight Glow */}
       <div 
         className="bg-spotlight"
@@ -131,7 +98,7 @@ export default function CustomCursor() {
         }}
       />
       
-      {/* Custom Core Precise Dot */}
+      {/* Custom Cursor Dot */}
       <div 
         className={`cursor-dot ${isHovered ? 'hover' : ''}`}
         style={{
@@ -140,21 +107,14 @@ export default function CustomCursor() {
         }}
       />
 
-      {/* Gooey Trail nodes */}
-      <div className="cursor-goo-container">
-        {trail.map((node, index) => (
-          <div
-            key={index}
-            className={`cursor-trail-node ${isHovered ? 'hover' : ''}`}
-            style={{
-              left: `${node.x}px`,
-              top: `${node.y}px`,
-              transform: `translate(-50%, -50%) scale(${1 - index * 0.15})`,
-              zIndex: 9998 - index,
-            }}
-          />
-        ))}
-      </div>
+      {/* Trailing Outer Ring */}
+      <div 
+        className={`cursor-ring ${isHovered ? 'hover' : ''}`}
+        style={{
+          left: `${trail.x}px`,
+          top: `${trail.y}px`,
+        }}
+      />
     </>
   );
 }

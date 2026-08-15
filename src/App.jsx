@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
-import FluidBackground from './components/FluidBackground';
+import ParticlesBackground from './components/ParticlesBackground';
 import Hero from './components/Hero';
 import About from './components/About';
 import Skills from './components/Skills';
@@ -130,7 +130,7 @@ export default function App() {
   return (
     <div className="app-container">
       <CustomCursor />
-      <FluidBackground />
+      <ParticlesBackground />
       
       {/* Yasio vertical track indicator */}
       <div className="timeline-track-container">
