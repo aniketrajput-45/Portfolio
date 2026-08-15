@@ -659,12 +659,15 @@ h1, h2, h3, h4 {
 }
 
 .project-block__title {
-  font-size: 1.8rem;
+  font-size: clamp(1.2rem, 3.5vw, 1.8rem);
   font-family: var(--heading-font);
   font-weight: 800;
   margin: 0;
   color: var(--text-primary);
   transition: transform 0.4s cubic-bezier(0.11, 0.82, 0.39, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .project-block:hover .project-block__title {
@@ -686,13 +689,16 @@ h1, h2, h3, h4 {
 }
 
 .project-block__second-title {
-  font-size: 2.4rem;
+  font-size: clamp(1.4rem, 4vw, 2.4rem);
   font-family: var(--heading-font);
   font-weight: 800;
   margin: 0;
   color: var(--text-primary);
   transform: translateY(105%);
   transition: transform 0.45s cubic-bezier(0.11, 0.82, 0.39, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .project-block:hover .project-block__second-title {

@@ -69,6 +69,7 @@ export default function App() {
 
   // Scrollspy & Scroll fade-in / block reveal animations
   useEffect(() => {
+    if (!isLoaded) return;
     const sections = document.querySelectorAll('.content-section');
     
     // Observer for Scrollspy
@@ -144,7 +145,7 @@ export default function App() {
       spyObserver.disconnect();
       animationObserver.disconnect();
     };
-  }, []);
+  }, [isLoaded]);
 
   return (
     <>
