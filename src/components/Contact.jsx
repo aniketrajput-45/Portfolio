@@ -27,9 +27,7 @@ export default function Contact() {
 
   return (
     <section id="contact" className="content-section">
-      <h2 className="section-title block-reveal">
-        <span className="block-reveal-content">Contact</span>
-      </h2>
+      <h2 className="section-title">Contact</h2>
       
       <div className="contact-layout">
         <div className="contact-info">

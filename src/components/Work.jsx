@@ -69,9 +69,7 @@ export default function Work({ onSelectProject }) {
 
   return (
     <section id="work" className="content-section" style={{ borderTop: '1px solid var(--border)', paddingTop: '100px' }}>
-      <h2 className="section-title block-reveal">
-        <span className="block-reveal-content">Work</span>
-      </h2>
+      <h2 className="section-title">Work</h2>
       
       <div className="projects-wrapper">
         {projects.map((project, idx) => (

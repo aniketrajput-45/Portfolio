@@ -26,9 +26,7 @@ export default function Skills() {
 
   return (
     <section id="skills" className="content-section">
-      <h2 className="section-title block-reveal">
-        <span className="block-reveal-content">Skills</span>
-      </h2>
+      <h2 className="section-title">Skills</h2>
       
       <div className="skills-container" style={{ marginBottom: '4rem' }}>
         {skillCategories.map((category, catIdx) => (

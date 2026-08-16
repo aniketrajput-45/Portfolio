@@ -1,13 +1,20 @@
 import { useState, useEffect } from 'react';
+import Lenis from 'lenis';
 import Navbar from './components/Navbar';
 import ParticlesBackground from './components/ParticlesBackground';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
 import Hero from './components/Hero';
 import About from './components/About';
+import Achievements from './components/Achievements';
 import Skills from './components/Skills';
 import Work from './components/Work';
 import Contact from './components/Contact';
 import ProjectModal from './components/ProjectModal';
 import CustomCursor from './components/CustomCursor';
+import Footer from './components/Footer';
 
 export default function App() {
   const [theme, setTheme] = useState('dark');
@@ -16,6 +23,29 @@ export default function App() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
+
+  // Initialize Lenis smooth scroll
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.1,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+    });
+
+    let rafId;
+    function raf(time) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
+  }, []);
 
   // Simulated Olha-style loader count progress
   useEffect(() => {
@@ -71,6 +101,27 @@ export default function App() {
   useEffect(() => {
     if (!isLoaded) return;
     const sections = document.querySelectorAll('.content-section');
+
+    // GSAP ScrollTrigger for global section titles
+    const titles = gsap.utils.toArray('.section-title');
+    const titleAnims = [];
+    titles.forEach((title) => {
+      const anim = gsap.fromTo(title,
+        { opacity: 0, y: 30 },
+        {
+          opacity: 1,
+          y: 0,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: title,
+            start: 'top 92%',
+            end: 'top 78%',
+            scrub: 1.1,
+          }
+        }
+      );
+      titleAnims.push(anim);
+    });
     
     // Observer for Scrollspy
     const spyOptions = {
@@ -144,6 +195,10 @@ export default function App() {
       clearTimeout(timer);
       spyObserver.disconnect();
       animationObserver.disconnect();
+      titleAnims.forEach((anim) => {
+        if (anim.scrollTrigger) anim.scrollTrigger.kill();
+        anim.kill();
+      });
     };
   }, [isLoaded]);
 
@@ -177,19 +232,13 @@ export default function App() {
       <main>
         <Hero onNavClick={handleNavClick} />
         <About />
+        <Achievements />
         <Skills />
         <Work onSelectProject={setSelectedProject} />
         <Contact />
       </main>
 
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-brand">ANIKET KUMAR SINGH &copy; 2026</div>
-          <div style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
-            Built with React &amp; CSS Variables
-          </div>
-        </div>
-      </footer>
+      <Footer onNavClick={handleNavClick} />
 
       {selectedProject && (
         <ProjectModal 
